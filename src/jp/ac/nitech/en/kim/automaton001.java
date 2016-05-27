@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 
 /*
+ *
  * Auther:Y.J.kim
  * date:2016 may 26
  * 名工大2年のオートマトンの課題を解く
@@ -16,6 +17,8 @@ import java.util.regex.Pattern;
  * プログラムとして実装してみた。
  * できるだけわかりやすく書くので
  * ゆっくりしてってね～
+ *
+ * 教科書の課題4.2をやってくよ～
  *
  * 状態遷移図をもとにガリガリやってくよ。
  * 状態遷移図は教科書の回答にのってるやつを使うね。
@@ -25,12 +28,11 @@ import java.util.regex.Pattern;
  *
  * しゃーなしでハードコーディングしています。
  * 受理常態から遷移する場合の実装してないです。
+ * 	訂正　5/27　停止するまで動くようにした。
  * あと、左端のblankの実装してないよ・・・笑
+ * 	訂正　5/27　一応実装しました。。。
  * ↑忘れてた
  *
- *
- *
- * 教科書の課題4.2をやってくよ～
  *
  */
 
@@ -68,7 +70,7 @@ public class automaton001 {
 		now = states.get("q0");
 
 		//テープを読んで状態を遷移するよ
-		while(!now.isAcception()){//accept:受理するまでループループ
+		while(true){//accept:受理するまでループループ
 			System.out.println("now:"+now.getName());
 			if(tapePointer>=tape.size()){
 				System.out.println("input:blank");
@@ -77,21 +79,23 @@ public class automaton001 {
 			}
 			System.out.println("index:"+tapePointer);
 			String trans = null;
-			try {
-				trans = now.transision();
-			} catch (Exception e) {
-				if(tapePointer>=tape.size()){
-					System.out.println("input:blank");
-				}else{
-					System.out.println("input:"+tape.get(tapePointer));
-				}
-				now.debug();
-				e.printStackTrace();
-			}
+			trans = now.transision();
 			printTape();
-			now = states.get(trans);
+			if(trans.equals("stop")){
+				break;
+			}
+			now = getStateByName(states, trans);
 		}
-		System.out.println("input accepted!!\n");
+		if(now.isAcception()){
+			System.out.println("input accepted!!\n");
+		}else{
+			System.out.println("input NOT accepted!!\n");
+		}
+	}
+
+
+	private static State getStateByName(HashMap<String,State> states,String trans) {
+		return states.get(trans);
 	}
 
 
@@ -188,19 +192,24 @@ public class automaton001 {
 			this.code.put(codes[0], tmp);
 		}
 
-		String transision() throws Exception{//入力から遷移先を返す
-			String input;
+		String transision(){//入力から遷移先を返す
+			String input = null;
 			if(tapePointer>=tape.size()){
+				input = "blank";
+			}else if(tapePointer<0){
 				input = "blank";
 			}else{
 				input = tape.get(tapePointer);
 			}
 			String[] str = this.code.get(input);
 			if(str==null){
-				throw new Exception("unaccepted...");
+				return "stop";
 			}
 			if(tapePointer<tape.size()){
 				tape.remove(tapePointer);
+			}
+			if(tapePointer<0){
+				tapePointer=0;
 			}
 			tape.add(tapePointer,str[0]);
 			if(str[1].equals("R")){
@@ -208,7 +217,7 @@ public class automaton001 {
 			}else if(str[1].equals("L")){
 				tapePointer--;
 			}else{
-				throw new Exception("unaccepted...");
+				return "stop";
 			}
 			return connection.get(input);
 		}
